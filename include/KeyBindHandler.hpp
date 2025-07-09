@@ -2,6 +2,9 @@
 #ifndef HPP__KeyBindHandler
 #define HPP__KeyBindHandler
 
+
+#include <iostream>
+
 #include <string>
 #include <vector>
 #include <initializer_list>
@@ -104,6 +107,98 @@ namespace DIY_KBH {
 
 
     /// ========== Helper Functions ==========
+
+    template<typename checkType>
+    inline int findVectorIndex(std::vector<checkType> vec, checkType toFind) {
+        typename std::vector<checkType>::iterator idx = find(vec.begin(), vec.end(), toFind);
+        if(idx!=vec.end()) return idx-vec.begin();
+        else return -1;
+    }
+
+    /**
+     * @brief search and find index in std::string vector to given std::string to find
+     * @param vec `std::std::vector<std::string>` vector search through
+     * @param toFind `std::string` var to find in vector
+     * @return index in vector, or `-1` if not found
+    */
+    inline int findVectorIndex(std::vector<std::string> vec, std::string toFind) {
+        std::vector<std::string>::iterator idx = find(vec.begin(), vec.end(), toFind);
+
+        if(idx != vec.end()) {
+            return idx-vec.begin();
+        }
+        else {
+            return -1;
+        }
+    }
+    /**
+     * @brief search and find index in std::string vector to given std::string to find
+     * @param vecvec `std::std::vector<std::std::vector<std::string>>` vector with vector search through
+     * @param toFind `std::string` var to find in vector
+     * @return 2d `std::std::vector<int>` of position/coordinates
+    */
+    inline std::vector<int> findVectorIndex(std::vector<std::vector<std::string>> vecvec, std::string toFind, bool printChecks=false) {
+        if(printChecks) {
+            std::cout <<"\"" <<toFind << "\": "<< vecvec.size()<< ": {\n";
+            for(std::vector<std::string> vecStr: vecvec) {
+                std::cout << "\t{ ";
+                for(std::string strIIng: vecStr) std::cout << strIIng << " ";
+                std::cout<<"}" << std::endl;
+            }
+            std::cout << "}"<<std::endl;
+        }
+    
+        if(vecvec.size()==0 || vecvec[0].size()==0) return std::vector<int>(2, -1);
+
+        std::vector<int> indices(2, -1);
+        for(size_t i=0; i<vecvec.size(); i++) {
+            for(size_t n=0; n<vecvec[i].size(); n++) {
+                if(vecvec[i][n]==toFind) {
+                    indices[0] = i;
+                    indices[1] = n;
+                    return indices;
+                }
+            }
+        }
+        return indices;
+    }
+    inline std::vector<int> findVectorIndex(std::vector<std::vector<std::string>> vecvec, std::vector<std::string> toFind, bool printChecks=false) {
+        std::vector<int> indices(2, -1);
+        for(std::string subFind: toFind) {
+            indices = findVectorIndex(vecvec, subFind, printChecks);
+            if(indices[0] != -1) return indices;
+        }
+        return indices;
+    }
+
+    /**
+     * @brief Match vectors for whether they contain the same elements
+     * 
+     * @tparam typeVar type of the elements in the vectors
+     * @param vec0 first vector
+     * @param vec1 second vector
+     * @param orderImportant whether the order element values have to match
+     * @return true if the vectors matched
+     * @return false if the vectors didn't match
+     */
+    template<typename typeVar>
+    inline bool match_vectors(std::vector<typeVar> vec0, std::vector<typeVar> vec1, bool orderImportant=false) {
+        if(vec0.size()!=vec1.size()) throw std::invalid_argument("the vector's aren't the same size.");
+
+        std::vector<size_t> avoidIdx;
+        for(size_t i=0; i<vec0.size(); i++) {
+            for(size_t ii=0; ii<vec1.size(); ii++) {
+                if(vec0[i]==vec1[ii] && findVectorIndex<size_t>(avoidIdx, ii)!=ii) {
+                    avoidIdx.push_back(ii);
+                    continue;
+                }
+                else if(orderImportant) return false;
+            }
+        }
+        if(avoidIdx.size()!=vec0.size()) return false;
+
+        return true;
+    }
 
     /**
      * @brief Find a std::vector inside another std::vector
